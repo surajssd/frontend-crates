@@ -1,0 +1,20 @@
+## Conversation
+Address the new review feedback on PR 668 about a repeated prompt assertion.
+
+## Actions
+Confirmed that four stock templates reuse reasoning_effort as their native argument. Limited the alias assertion in renderer/tests/generation_state.rs to templates with a different native key. Ran the full renderer suite on Rust 1.96.1 with 370 tests passing and 2 ignored. Formatting and all-target Clippy passed.
+
+## Errors & Mistakes
+None.
+
+## Dead Ends
+None.
+
+## Hints for Future Agents
+The reset of the top-level request effort belongs outside the alias check, so later cases begin with that field cleared.
+
+## Codebase Discoveries
+Muse Glimmer is the only current test case with a distinct native argument, reasoning_strength.
+
+## Open Questions
+None.
