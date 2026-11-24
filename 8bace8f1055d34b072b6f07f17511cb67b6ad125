@@ -1,17 +1,17 @@
 ## Conversation
-Address the request for a common opt-in policy with Kimi K3 and K3.1 as its first implementation. Keep the public wording about renderer behavior.
+Address the request for a common opt-in policy with Kimi K3 and K3.1 as its first implementation. Keep public wording about renderer behavior.
 
 ## Actions
-Read the review, inspected effort resolution in the Kimi and DeepSeek V4 renderers, updated the renderer README, and added explicit reasoning_effort=max to the existing Kimi test matrix. Formatted and tested with Rust 1.96.1. The renderer suite passed 368 tests with 2 ignored.
+Read the review, inspected Kimi and DeepSeek V4 effort resolution, updated the renderer README, and added explicit reasoning_effort=max to the existing Kimi test matrix. Verified formatting and Clippy with the pinned Rust 1.96.1 toolchain. The renderer suite passed 368 tests with 2 ignored. Regenerated the latest conformance report on Linux amd64 and verified the Kimi K3 XTML section and commit link in a browser over HTTP.
 
 ## Errors & Mistakes
-None
+The initial rustup run 1.96.1 cargo clippy invocation selected Homebrew's cargo-clippy 1.100. It reported 'this `match` expression can be replaced with `?`' in parsers/v2/src/tool_calling/v1core/xml/kimi_k2_parser.rs at line 259. Selecting the pinned toolchain's bin directory first on PATH fixed the command. The parser did not need an edit.
 
 ## Dead Ends
 None
 
 ## Hints for Future Agents
-Use rustup run 1.96.1 for local validation because the cargo on PATH is Homebrew's 1.100.0. The test exercises both Kimi versions and adds a case to an existing test, so the test count stays the same.
+Prepend the directory containing the binary from rustup which --toolchain 1.96.1 rustc to PATH and check cargo clippy --version. The test exercises both Kimi versions and adds a case to an existing test, so the test count stays the same.
 
 ## Codebase Discoveries
 The option is a template argument. Each renderer can implement the policy where its format permits omitting the fallback. Explicit effort follows that renderer's existing rules.
