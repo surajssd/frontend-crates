@@ -1,0 +1,20 @@
+## Conversation
+Expose an opt-in way for Kimi deployments to suppress the implicit effort message while retaining explicit per-request effort.
+
+## Actions
+Traced the Dynamo frontend's template defaults and the renderer path. Added prompt-level tests for K3 and K3.1, observed them fail on main, implemented optional fallback rendering, documented the template argument, and ran the renderer suite and rustfmt.
+
+## Errors & Mistakes
+Before implementation the fallback-message assertion failed with left: true, right: false. The non-boolean flag test also received a rendered prompt where an invalid request was expected.
+
+## Dead Ends
+The repository's report publisher did not build on macOS because renameat2 and RENAME_EXCHANGE are Linux-specific. The Linux arm64 build also failed because its C character pointer has different signedness. The release build succeeded on Linux amd64.
+
+## Hints for Future Agents
+The Dynamo frontend normalizes the top-level reasoning_effort into template arguments. emit_default_thinking_effort controls only the implicit max instruction; the generation channel has its own decision.
+
+## Codebase Discoveries
+K3 and K3.1 share a formatter. The prompt tests can check both the text and the GenerationState metadata without loading a model.
+
+## Open Questions
+None.
