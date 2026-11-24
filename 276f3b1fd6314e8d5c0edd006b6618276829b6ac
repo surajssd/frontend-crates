@@ -1,0 +1,20 @@
+## Conversation
+Review two findings on PR 668. The first reported a missing top-level reasoning effort for the Kimi native formatter. The second proposed reversing the map merge used by the stock Jinja templates.
+
+## Actions
+Added a request-path regression for Kimi K3 and K3.1. It failed on the previous head for an explicit max with the default instruction disabled. Read the request-level value before resolving the default, with the Kimi thinking_effort argument taking precedence and the top-level field overriding the nested reasoning_effort alias. The new test exercises each precedence decision. The full renderer suite passed 371 tests with 2 ignored on Rust 1.96.1. Formatting and all-target Clippy passed.
+
+## Errors & Mistakes
+The previous implementation only read template arguments. A caller that had not normalized the top-level reasoning_effort into template arguments lost the instruction when the default was suppressed.
+
+## Dead Ends
+The proposed merge reversal contradicted the locked MiniJinja 2.24.0 implementation. A compiled check produced true for [ctx, overrides] and false for [overrides, ctx]. The existing stock template integration test passed with the original order.
+
+## Hints for Future Agents
+Use a request with independent top-level effort and template arguments to exercise the native formatter boundary. The Kimi-specific thinking_effort keyword retains precedence over the shared field.
+
+## Codebase Discoveries
+Dynamo's frontend normalization writes a top-level effort over the generic template argument. The public renderer interface also allows consumers to pass the top-level field directly.
+
+## Open Questions
+None.
