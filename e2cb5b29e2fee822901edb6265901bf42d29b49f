@@ -1,0 +1,20 @@
+## Conversation
+Extend the default effort option in PR 668 to DeepSeek V4, GPT-OSS, GLM-5.2 and GLM-5.3, Beam, and Muse Glimmer. Preserve each model's normal generation prompt and explicit effort.
+
+## Actions
+Inspected each model's stock effort instruction and supplied argument. Extended the native V4 formatter and adapted the relevant executable Jinja blocks at template load. Added request-path tests and documented the supported templates with pinned upstream sources. On Rust 1.96.1, 370 renderer tests passed with 2 ignored, and formatting and Clippy passed. An independent program compared the complete stock GPT-OSS 20B/120B, GLM-5.2/5.3/5.3-Flash, Beam, and Muse Glimmer templates with the public renderer, with and without tools and a system message. Default and explicit prompts were byte-identical to the baseline. Opt-out removed only the native default directive.
+
+## Errors & Mistakes
+The initial DeepSeek regression failed because the original renderer still inserted the high prefix. A draft Jinja context expression failed with "no rules expected `..`". The explicit-effort test then exposed an incorrect map precedence assumption. MiniJinja merge_maps gives the last matching map precedence.
+
+## Dead Ends
+None
+
+## Hints for Future Agents
+Run Cargo with the Rust 1.96.1 toolchain bin directory first on PATH. Use full stock templates as a second check in addition to the small offline fixtures. Muse Glimmer uses reasoning_strength. Its template can already honor an effort instruction in a system message. Beam accepts numeric and labeled effort.
+
+## Codebase Discoveries
+The default and tool_use variants can have different templates. Track stock effort support per variant and preserve caller text, whitespace and generation framing. DeepSeek V4.1 has a different effort encoding and is outside this change.
+
+## Open Questions
+A future upstream change to an effort-emitting template block may need a corresponding adapter update.
