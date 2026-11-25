@@ -1,0 +1,116 @@
+Retained commit notes from ai-dynamo/frontend-crates#668, in commit order.
+
+# f0e5228446d388847073699816f5faca73620d23 feat(renderer): make the default Kimi thinking effort optional
+
+## Conversation
+Expose an opt-in way for Kimi deployments to suppress the implicit effort message while retaining explicit per-request effort.
+
+## Actions
+Traced the Dynamo frontend's template defaults and the renderer path. Added prompt-level tests for K3 and K3.1, observed them fail on main, implemented optional fallback rendering, documented the template argument, and ran the renderer suite and rustfmt.
+
+## Errors & Mistakes
+Before implementation the fallback-message assertion failed with left: true, right: false. The non-boolean flag test also received a rendered prompt where an invalid request was expected.
+
+## Dead Ends
+The repository's report publisher did not build on macOS because renameat2 and RENAME_EXCHANGE are Linux-specific. The Linux arm64 build also failed because its C character pointer has different signedness. The release build succeeded on Linux amd64.
+
+## Hints for Future Agents
+The Dynamo frontend normalizes the top-level reasoning_effort into template arguments. emit_default_thinking_effort controls only the implicit max instruction; the generation channel has its own decision.
+
+## Codebase Discoveries
+K3 and K3.1 share a formatter. The prompt tests can check both the text and the GenerationState metadata without loading a model.
+
+## Open Questions
+None.
+
+# 2f9f4d48a20b3cc01d55bb79eb22a03f40702719 docs(renderer): define the default thinking effort option
+
+## Conversation
+Address the request for a common opt-in policy with Kimi K3 and K3.1 as its first implementation. Keep public wording about renderer behavior.
+
+## Actions
+Read the review, inspected Kimi and DeepSeek V4 effort resolution, updated the renderer README, and added explicit reasoning_effort=max to the existing Kimi test matrix. Verified formatting and Clippy with the pinned Rust 1.96.1 toolchain. The renderer suite passed 368 tests with 2 ignored. Regenerated the latest conformance report on Linux amd64 and verified the Kimi K3 XTML section and commit link in a browser over HTTP.
+
+## Errors & Mistakes
+The initial rustup run 1.96.1 cargo clippy invocation selected Homebrew's cargo-clippy 1.100. It reported 'this `match` expression can be replaced with `?`' in parsers/v2/src/tool_calling/v1core/xml/kimi_k2_parser.rs at line 259. Selecting the pinned toolchain's bin directory first on PATH fixed the command. The parser did not need an edit.
+
+## Dead Ends
+None
+
+## Hints for Future Agents
+Prepend the directory containing the binary from rustup which --toolchain 1.96.1 rustc to PATH and check cargo clippy --version. The test exercises both Kimi versions and adds a case to an existing test, so the test count stays the same.
+
+## Codebase Discoveries
+The option is a template argument. Each renderer can implement the policy where its format permits omitting the fallback. Explicit effort follows that renderer's existing rules.
+
+## Open Questions
+Other model families are follow-up work. Only the Kimi family implements the option in this commit.
+
+# e2cb5b29e2fee822901edb6265901bf42d29b49f feat(renderer): support optional default effort across model families
+
+## Conversation
+Extend the default effort option in PR 668 to DeepSeek V4, GPT-OSS, GLM-5.2 and GLM-5.3, Beam, and Muse Glimmer. Preserve each model's normal generation prompt and explicit effort.
+
+## Actions
+Inspected each model's stock effort instruction and supplied argument. Extended the native V4 formatter and adapted the relevant executable Jinja blocks at template load. Added request-path tests and documented the supported templates with pinned upstream sources. On Rust 1.96.1, 370 renderer tests passed with 2 ignored, and formatting and Clippy passed. An independent program compared the complete stock GPT-OSS 20B/120B, GLM-5.2/5.3/5.3-Flash, Beam, and Muse Glimmer templates with the public renderer, with and without tools and a system message. Default and explicit prompts were byte-identical to the baseline. Opt-out removed only the native default directive.
+
+## Errors & Mistakes
+The initial DeepSeek regression failed because the original renderer still inserted the high prefix. A draft Jinja context expression failed with "no rules expected `..`". The explicit-effort test then exposed an incorrect map precedence assumption. MiniJinja merge_maps gives the last matching map precedence.
+
+## Dead Ends
+None
+
+## Hints for Future Agents
+Run Cargo with the Rust 1.96.1 toolchain bin directory first on PATH. Use full stock templates as a second check in addition to the small offline fixtures. Muse Glimmer uses reasoning_strength. Its template can already honor an effort instruction in a system message. Beam accepts numeric and labeled effort.
+
+## Codebase Discoveries
+The default and tool_use variants can have different templates. Track stock effort support per variant and preserve caller text, whitespace and generation framing. DeepSeek V4.1 has a different effort encoding and is outside this change.
+
+## Open Questions
+A future upstream change to an effort-emitting template block may need a corresponding adapter update.
+
+# 80dc5c2f2703b6010c3bd0fcd59e3c72e05c8d2d test(renderer): check the effort alias only when distinct
+
+## Conversation
+Address the new review feedback on PR 668 about a repeated prompt assertion.
+
+## Actions
+Confirmed that four stock templates reuse reasoning_effort as their native argument. Limited the alias assertion in renderer/tests/generation_state.rs to templates with a different native key. Ran the full renderer suite on Rust 1.96.1 with 370 tests passing and 2 ignored. Formatting and all-target Clippy passed.
+
+## Errors & Mistakes
+None.
+
+## Dead Ends
+None.
+
+## Hints for Future Agents
+The reset of the top-level request effort belongs outside the alias check, so later cases begin with that field cleared.
+
+## Codebase Discoveries
+Muse Glimmer is the only current test case with a distinct native argument, reasoning_strength.
+
+## Open Questions
+None.
+
+# 276f3b1fd6314e8d5c0edd006b6618276829b6ac fix(renderer): honor top-level reasoning effort for Kimi
+
+## Conversation
+Review two findings on PR 668. The first reported a missing top-level reasoning effort for the Kimi native formatter. The second proposed reversing the map merge used by the stock Jinja templates.
+
+## Actions
+Added a request-path regression for Kimi K3 and K3.1. It failed on the previous head for an explicit max with the default instruction disabled. Read the request-level value before resolving the default, with the Kimi thinking_effort argument taking precedence and the top-level field overriding the nested reasoning_effort alias. The new test exercises each precedence decision. The full renderer suite passed 371 tests with 2 ignored on Rust 1.96.1. Formatting and all-target Clippy passed.
+
+## Errors & Mistakes
+The previous implementation only read template arguments. A caller that had not normalized the top-level reasoning_effort into template arguments lost the instruction when the default was suppressed.
+
+## Dead Ends
+The proposed merge reversal contradicted the locked MiniJinja 2.24.0 implementation. A compiled check produced true for [ctx, overrides] and false for [overrides, ctx]. The existing stock template integration test passed with the original order.
+
+## Hints for Future Agents
+Use a request with independent top-level effort and template arguments to exercise the native formatter boundary. The Kimi-specific thinking_effort keyword retains precedence over the shared field.
+
+## Codebase Discoveries
+Dynamo's frontend normalization writes a top-level effort over the generic template argument. The public renderer interface also allows consumers to pass the top-level field directly.
+
+## Open Questions
+None.
